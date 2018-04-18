@@ -13,7 +13,6 @@ public class App extends JFrame{
 
     private JButton solveButton = new JButton("solve");
     private JButton clearButton = new JButton("clear");
-    //private GridLayout mazeLayout = new GridLayout(0,Point.SIZE*2+1);
 
     private Labyrinth labyrinth = new Labyrinth();
 
@@ -31,7 +30,7 @@ public class App extends JFrame{
         controls.add(clearButton);
 
         JPanel mazePanel = new JPanel();
-        mazePanel.setLayout(new GridBagLayout());//mazeLayout);
+        mazePanel.setLayout(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
         //natural height, maximum width
@@ -50,7 +49,7 @@ public class App extends JFrame{
                     currentButton.setEnabled(false);
                 }
                 Color color = labyrinth.getValue(i,j)? Color.WHITE : Color.BLACK;
-                if(i%2==0 && j%2==0)  color = Color.gray;
+                if(i%2==0 && j%2==0)  color = Color.BLACK;
                 currentButton.setBackground(color);
                 c.gridy = i;
                 c.gridx = j;
@@ -87,7 +86,7 @@ public class App extends JFrame{
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        App frame = new App("GridLayoutDemo");
+        App frame = new App("Labyrinth solver with A*");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //Set up the content pane.
         frame.addComponentsToPane(frame.getContentPane());
