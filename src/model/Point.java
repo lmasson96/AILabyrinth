@@ -1,7 +1,7 @@
 package model;
 
 public class Point {
-    public static final int SIZE = 5;
+    public static final int SIZE = 10;
 
     public int x;
     public int y;
@@ -30,7 +30,7 @@ public class Point {
      * @return true if coordinate is tile, false if possible border
      */
     public boolean isTile(){
-        return (this.x % 2 == 1 && this.y % 2 == 1);
+        return (isValid() && this.x % 2 == 1 && this.y % 2 == 1);
     }
 
     /**

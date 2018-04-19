@@ -8,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App extends JFrame{
 
@@ -15,6 +17,9 @@ public class App extends JFrame{
     private JButton clearButton = new JButton("clear");
 
     private Labyrinth labyrinth = new Labyrinth();
+    private MyButton tileButtons [][] = new MyButton [Point.SIZE][Point.SIZE];
+
+    private List<Point> path;
 
     public App(String name) {
         super(name);
@@ -48,6 +53,9 @@ public class App extends JFrame{
                 if(i== 0 || i== Point.SIZE*2 || j== 0 || j== Point.SIZE*2 || i%2==j%2){
                     currentButton.setEnabled(false);
                 }
+                if(new Point(i,j).isTile()){
+                    tileButtons[i/2][j/2] = currentButton;
+                }
                 Color color = labyrinth.getValue(i,j)? Color.WHITE : Color.BLACK;
                 if(i%2==0 && j%2==0)  color = Color.BLACK;
                 currentButton.setBackground(color);
@@ -62,14 +70,23 @@ public class App extends JFrame{
 
         solveButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                JOptionPane.showMessageDialog(null, "TODO solve");
+                List<Point> pathSoFar = new ArrayList<>();
+                pathSoFar.add(new Point(1,1));
+
+                List<Point> solution = labyrinth.solve(pathSoFar, 0);
+
+                if(solution == null){
+                    JOptionPane.showMessageDialog(null, "Solver can't find a path");
+                } else {
+                    updatePath(solution);
+                }
             }
 
         });
 
         clearButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                JOptionPane.showMessageDialog(null, "TODO clear");
+                clearPath();
             }
 
         });
@@ -93,6 +110,21 @@ public class App extends JFrame{
         //Display the window.
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private void updatePath(List<Point> list){
+        this.path = list;
+        for(Point p : this.path){
+            tileButtons[p.x/2][p.y/2].setBackground(Color.YELLOW);
+        }
+    }
+
+    private void clearPath(){
+        if(this.path == null) return;
+        for(Point p : this.path){
+            tileButtons[p.x/2][p.y/2].setBackground(Color.WHITE);
+        }
+        this.path.clear();
     }
 
     public static void main(String[] args) {
