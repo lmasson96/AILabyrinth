@@ -1,7 +1,7 @@
 package model;
 
 public class Point {
-    public static final int SIZE = 10;
+    public static final int SIZE = 5;
 
     public int x;
     public int y;

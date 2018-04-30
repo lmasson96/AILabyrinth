@@ -1,8 +1,12 @@
 package model;
 
 
+import org.omg.CORBA.INTERNAL;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Labyrinth {
 
@@ -50,65 +54,106 @@ public class Labyrinth {
     /**
      * A*
      */
-    public List<Point> solve(List<Point> pathSoFar, int distanceSoFar){
-        Point currentPoint = pathSoFar.get(pathSoFar.size()-1);
-        Point bestPoint = null;
-        int minValue = Integer.MAX_VALUE;
-        for(Point candidate : neighbours(currentPoint)) {
-            if(!pathSoFar.contains(candidate) && canGoTo(currentPoint, candidate)){
-                int h = heuristic(candidate);
-                if (h==0){  //We arrived at the exit
-                    pathSoFar.add(candidate);
-                    return pathSoFar;
+    public List<Point> solve(){
+        Map<Integer,Node> openList = new HashMap<>();
+        Map<Integer,Node> closedList = new HashMap<>();
+
+        Node nodeEntry = new Node(-1,0,0);
+
+        openList.put(0, nodeEntry);
+        boolean notFound = true;
+        int exitIndex = Point.SIZE*Point.SIZE -1;
+
+
+        while(notFound && !openList.isEmpty()){
+            //take best candidate
+            int bestValue = Integer.MAX_VALUE;
+            int bestIndex = -1;
+            for(int n : openList.keySet()){
+                if(openList.get(n).getFValue() < bestValue){
+                    bestValue = openList.get(n).getFValue();
+                    bestIndex = n;
                 }
-                if(h < minValue){
-                    minValue = h;
-                    bestPoint = candidate;
+            }
+            Node bestNode = openList.remove(bestIndex);
+            closedList.put(bestIndex, bestNode);
+
+            //check neighbours
+            for(Integer neighbour : getNeighbours(bestIndex)){
+                //in open list
+                if(openList.containsKey(neighbour)){
+                    Node nodeOfNeighbour = openList.get(neighbour);
+                    if(neighbour == exitIndex){
+                        closedList.put(neighbour, nodeOfNeighbour);
+                        notFound = false;
+                        break;
+                    }
+                    if(nodeOfNeighbour.getFValue() > bestNode.getFValue() +1){
+                        nodeOfNeighbour.updateParent(bestIndex,bestNode.gValue +1);
+                    }
+                }
+                else if(!closedList.containsKey(neighbour)){  //not in open list yet
+                    Node nodeOfNeighbour =new Node (bestIndex,bestNode.gValue+1, neighbour);
+                    if(neighbour == exitIndex){
+                        closedList.put(neighbour, nodeOfNeighbour);
+                        notFound = false;
+                        break;
+                    }
+                    openList.put(neighbour, nodeOfNeighbour);
                 }
             }
         }
-        if(bestPoint!=null){
-            pathSoFar.add(bestPoint);
-            return solve(pathSoFar, distanceSoFar+1);
-        } else {    //no solution
+
+        if(!closedList.containsKey(exitIndex)){
+            //no possible path
             return null;
         }
+
+        List<Point> path = new ArrayList<>();
+        path.add(new Point(2*(exitIndex/Point.SIZE)+1, 2*(exitIndex%Point.SIZE)+1));
+        int i = exitIndex;
+        while(i!=0){
+            i=closedList.get(i).parentIndex;
+            int row = i/Point.SIZE;
+            int column = i % Point.SIZE;
+            path.add(new Point(2*row+1, 2*column+1));
+        }
+
+        return path;
     }
 
-    /**
-     * Say wether the border between currentPoint and candidate is off or on. currentPoint and candidate must be 2 tiles next to each other
-     * @param currentPoint
-     * @param candidate
-     * @return true if there is no border between the 2 points
-     */
-    private boolean canGoTo(Point currentPoint, Point candidate) {
-        boolean result = maze[(currentPoint.x+candidate.x)/2][(currentPoint.y+candidate.y)/2];
-        System.out.println("can go from ("+currentPoint.x+", "+currentPoint.y+") to ("+candidate.x+", "+candidate.y+") = "+result);
+
+    private boolean canGoTo(int indexFrom, int indexTo) {
+        int x1 =2*(indexFrom/Point.SIZE)+1;
+        int y1 = 2*(indexFrom%Point.SIZE)+1;
+        int x2 = 2*(indexTo/Point.SIZE)+1;
+        int y2 = 2*(indexTo%Point.SIZE)+1;
+
+        boolean result = maze[(x1+x2)/2][(y1+y2)/2];
         return result;
     }
 
-    /**
-     * Heuristic function
-     * @param currentPoint
-     * @return estimated cost remaining to go from currentpoint to exit
-     */
-    public int heuristic(Point currentPoint){
-        //Point exitPoint = new Point(Point.SIZE*2-1, Point.SIZE*2-1);
-        return ((Point.SIZE*2-1-currentPoint.y) + (Point.SIZE*2-1-currentPoint.x))/2;
-    }
 
-    public List<Point> neighbours(Point p){
-        List<Point> list = new ArrayList<>();
-        Point left = new Point(p.x, p.y-2);
-        if(left.isTile()) list.add(left);
-        Point right = new Point(p.x, p.y+2);
-        if(right.isTile()) list.add(right);
-        Point up = new Point(p.x-2, p.y);
-        if(up.isTile()) list.add(up);
-        Point down = new Point(p.x+2, p.y);
-        if(down.isTile()) list.add(down);
+    private List<Integer> getNeighbours(int currentIndex){
+        int row = currentIndex/Point.SIZE;
+        int column = currentIndex % Point.SIZE;
 
-        return list;
+        List<Integer> result = new ArrayList();
+        int neighbour = currentIndex - Point.SIZE;  //top
+        if(row>0 && canGoTo(currentIndex, neighbour))
+            result.add(neighbour);
+        neighbour = currentIndex + Point.SIZE;      //down
+        if(row<Point.SIZE-1 && canGoTo(currentIndex, neighbour))
+            result.add(neighbour);
+        neighbour = currentIndex -1;                //left
+        if(column > 0 && canGoTo(currentIndex, neighbour))
+            result.add(neighbour);
+        neighbour = currentIndex +1;                //right
+        if(column<Point.SIZE-1 && canGoTo(currentIndex, neighbour))
+            result.add(neighbour);
+
+        return result;
+
     }
 
 
@@ -132,4 +177,6 @@ public class Labyrinth {
         }
         return l;
     }
+
+
 }
